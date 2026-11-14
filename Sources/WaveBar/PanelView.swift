@@ -6,18 +6,16 @@ struct PanelView: View {
     @EnvironmentObject private var player: Player
 
     var body: some View {
-        ZStack {
-            Backdrop(image: player.cover)
-            Group {
-                if player.isSignedIn {
-                    PlayerContent()
-                } else {
-                    SignInContent()
-                }
+        Group {
+            if player.isSignedIn {
+                PlayerContent()
+            } else {
+                SignInContent()
             }
-            .padding(18)
         }
+        .padding(18)
         .frame(width: 330)
+        .background { Backdrop(image: player.cover) }
         .environment(\.colorScheme, .dark)
     }
 }
@@ -29,12 +27,16 @@ private struct Backdrop: View {
         ZStack {
             Color(white: 0.08)
             if let image {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .blur(radius: 60)
-                    .saturation(1.4)
-                    .opacity(0.65)
+                Color.clear
+                    .overlay {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .scaleEffect(1.4)
+                            .blur(radius: 50)
+                            .saturation(1.3)
+                            .opacity(0.6)
+                    }
                     .transition(.opacity)
             } else {
                 LinearGradient(
@@ -177,9 +179,12 @@ private struct Cover: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.white.opacity(0.06))
             if let image = player.cover {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                Color.clear
+                    .overlay {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    }
                     .transition(.opacity)
             } else {
                 Image(systemName: "music.note")
@@ -350,10 +355,32 @@ private struct VolumeBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "speaker.fill").font(.caption).foregroundStyle(.secondary)
-            Slider(value: Binding(get: { Double(player.volume) }, set: { player.volume = Float($0) }), in: 0...1)
-                .controlSize(.mini)
-                .tint(.white)
+            VolumeSlider(value: Binding(get: { Double(player.volume) }, set: { player.volume = Float($0) }))
             Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundStyle(.secondary)
         }
+    }
+}
+
+private struct VolumeSlider: View {
+    @Binding var value: Double
+    @State private var active = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.white.opacity(0.18))
+                Capsule().fill(.white.opacity(active ? 1 : 0.75)).frame(width: geo.size.width * value)
+            }
+            .frame(height: active ? 6 : 4)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { g in value = min(max(g.location.x / geo.size.width, 0), 1) }
+            )
+            .onHover { active = $0 }
+            .animation(.easeOut(duration: 0.15), value: active)
+        }
+        .frame(height: 14)
     }
 }
