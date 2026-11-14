@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wave Bar — Яндекс Музыка в строке меню macOS</title>
+<meta name="description" content="Бесплатный плеер Яндекс Музыки в строке меню Mac: Моя волна, любимые треки, медиаклавиши и «Сейчас играет».">
+<meta property="og:title" content="Wave Bar — Яндекс Музыка в строке меню macOS">
+<meta property="og:description" content="Моя волна и любимые треки в один клик из строки меню Mac.">
+<meta property="og:image" content="https://kasevvlad.github.io/wave-bar/panel.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #0c0b0d;
+    --bg-2: #15130f;
+    --card: #1a1814;
+    --border: #2c2820;
+    --text: #f4efe6;
+    --muted: #a49c8d;
+    --accent: #ffc233;
+    --accent-2: #ff7a2f;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { overflow-x: hidden; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; text-decoration: none; }
+  .brand img { width: 34px; height: 34px; }
+  .nav-link { color: var(--muted); text-decoration: none; font-size: 15px; display: inline-flex; gap: 8px; align-items: center; }
+  .nav-link:hover { color: var(--text); }
+
+  .hero { position: relative; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding: 48px 0 96px; }
+  .hero::before {
+    content: ""; position: absolute; inset: -120px -200px auto auto; width: 720px; height: 720px; z-index: -1;
+    background: radial-gradient(circle at center, rgba(255, 180, 58, 0.22), transparent 62%);
+  }
+  .eyebrow { display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border: 1px solid var(--border);
+    border-radius: 999px; color: var(--muted); font-size: 14px; background: rgba(255,255,255,0.02); }
+  .eyebrow b { color: var(--accent); font-weight: 600; }
+  h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; letter-spacing: -0.03em; margin: 20px 0 18px; }
+  h1 span { background: linear-gradient(120deg, #ffe066, var(--accent) 45%, var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: 19px; max-width: 34em; margin: 0 0 32px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 12px; font-weight: 600;
+    text-decoration: none; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, #ffd24a, var(--accent-2)); color: #1a1206; box-shadow: 0 10px 30px -10px rgba(255, 150, 50, .6); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text); background: rgba(255,255,255,0.03); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.07); }
+  .meta { color: var(--muted); font-size: 14px; margin-top: 14px; }
+
+  .stage { position: relative; display: flex; flex-direction: column; align-items: center; }
+  .menubar { width: 100%; max-width: 440px; height: 30px; border-radius: 10px 10px 0 0; background: rgba(40, 36, 30, 0.85);
+    border: 1px solid var(--border); border-bottom: 0; display: flex; align-items: center; justify-content: flex-end;
+    gap: 16px; padding: 0 14px; font-size: 13px; color: #d8d0c2; backdrop-filter: blur(10px); }
+  .menubar .active { background: rgba(255,255,255,0.16); border-radius: 5px; padding: 2px 6px; display: inline-flex; }
+  .menubar svg { width: 16px; height: 16px; }
+  .panel { width: 330px; margin-top: 8px; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,0.08); animation: float 6s ease-in-out infinite; }
+  .panel img { display: block; width: 100%; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  section { padding: 72px 0; }
+  h2 { font-size: clamp(30px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .section-lead { color: var(--muted); margin: 0 0 40px; max-width: 40em; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { padding: 26px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border); }
+  .feature .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 16px;
+    background: rgba(255, 194, 51, 0.12); color: var(--accent); }
+  .feature .ico svg { width: 22px; height: 22px; }
+  .feature h3 { margin: 0 0 6px; font-size: 18px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .step { position: relative; padding: 26px 26px 26px 74px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border); }
+  .step::before { counter-increment: step; content: counter(step); position: absolute; left: 24px; top: 24px; width: 32px; height: 32px;
+    border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #1a1206; background: var(--accent); }
+  .step { min-width: 0; }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: var(--muted); font-size: 15px; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; }
+  pre { margin: 14px 0 0; padding: 14px 16px; background: #0f0e0b; border: 1px solid var(--border); border-radius: 10px; white-space: pre-wrap; word-break: break-all; color: #e8dcc4; }
+  .note { margin-top: 28px; padding: 18px 22px; border-radius: 14px; border: 1px solid var(--border); color: var(--muted); font-size: 15px; background: rgba(255,255,255,0.02); }
+  .note b { color: var(--text); }
+
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 24px; }
+    .grid, .steps { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="./"><img src="icon.svg" alt="">Wave Bar</a>
+    <a class="nav-link" href="https://github.com/kasevvlad/wave-bar">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow"><b>●</b> Бесплатно · открытый код (MIT)</span>
+      <h1>Яндекс Музыка <span>в строке меню</span> вашего Mac</h1>
+      <p class="lead">Один клик по иконке, и под рукой Моя волна, любимые треки, пауза и переключение. Без лишних окон и вкладок в браузере.</p>
+      <div class="actions">
+        <a class="btn btn-primary" id="download" href="https://github.com/kasevvlad/wave-bar/releases/latest">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+          Скачать для Mac
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/kasevvlad/wave-bar">Исходный код</a>
+      </div>
+      <p class="meta" id="meta">macOS 14 и новее · Apple Silicon</p>
+    </div>
+    <div class="stage" aria-hidden="true">
+      <div class="menubar">
+        <span>Wi‑Fi</span>
+        <span class="active"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="9" width="2.4" height="6" rx="1.2"/><rect x="7.2" y="6" width="2.4" height="12" rx="1.2"/><rect x="11.4" y="3" width="2.4" height="18" rx="1.2"/><rect x="15.6" y="7" width="2.4" height="10" rx="1.2"/><rect x="19.8" y="10" width="2.4" height="4" rx="1.2"/></svg></span>
+        <span>Пт 21:45</span>
+      </div>
+      <div class="panel"><img src="panel.png" alt="Панель Wave Bar: обложка, название трека, прогресс и кнопки управления"></div>
+    </div>
+  </header>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Всё, что нужно, и ничего лишнего</h2>
+    <p class="section-lead">Wave Bar живёт в строке меню и не занимает место в Dock. Музыка продолжает играть, даже когда панель закрыта.</p>
+    <div class="grid">
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="9" width="2.6" height="6" rx="1.3"/><rect x="7.4" y="6" width="2.6" height="12" rx="1.3"/><rect x="11.8" y="3" width="2.6" height="18" rx="1.3"/><rect x="16.2" y="7" width="2.6" height="10" rx="1.3"/></svg></div>
+        <h3>Моя волна</h3>
+        <p>Бесконечный поток рекомендаций. Лайки и пропуски учитываются, волна подстраивается под вас.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.6 5c2.1 0 3.6 1.2 4.4 2.5C11.8 6.2 13.3 5 15.4 5 19 5 21 8.6 19.6 11.8 17.5 16.4 12 21 12 21z"/></svg></div>
+        <h3>Мне нравится</h3>
+        <p>Вся коллекция любимых треков. Лайк ставится прямо из панели одной кнопкой.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M7 10v4M10 12h0M14 10l3 2-3 2"/></svg></div>
+        <h3>Медиаклавиши</h3>
+        <p>F7, F8 и F9 на клавиатуре управляют Wave Bar, как обычным плеером macOS.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg></div>
+        <h3>«Сейчас играет»</h3>
+        <p>Обложка и название трека в Пункте управления и на экране блокировки.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+        <h3>Безопасный вход</h3>
+        <p>Вход на официальной странице Яндекса. Токен хранится в Связке ключей macOS, пароль приложение не видит.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
+        <h3>Лёгкий и нативный</h3>
+        <p>Написан на SwiftUI, весит около мегабайта и почти не тратит память и батарею.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Установка</h2>
+    <p class="section-lead">Займёт минуту.</p>
+    <div class="steps">
+      <div class="step">
+        <h3>Скачайте и распакуйте</h3>
+        <p>Перенесите <code>Wave Bar.app</code> в папку «Программы».</p>
+      </div>
+      <div class="step">
+        <h3>Разрешите запуск</h3>
+        <p>Приложение не нотаризовано Apple. Нажмите «Всё равно открыть» в «Конфиденциальность и безопасность» или выполните:</p>
+        <pre>xattr -dr com.apple.quarantine "/Applications/Wave Bar.app"</pre>
+      </div>
+      <div class="step">
+        <h3>Войдите в Яндекс</h3>
+        <p>Нажмите на иконку ♪ в строке меню, затем «Войти через Яндекс». Готово.</p>
+      </div>
+    </div>
+    <div class="note">
+      <b>Важно.</b> Wave Bar — неофициальный клиент, он не связан с Яндексом и использует неофициальное API. Для прослушивания полных треков нужна подписка Яндекс Плюс, без неё играют 30-секундные фрагменты.
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <span>Wave Bar · не связан с Яндексом</span>
+    <a href="https://github.com/kasevvlad">github.com/kasevvlad</a>
+  </footer>
+</div>
+
+<script>
+  fetch("https://api.github.com/repos/kasevvlad/wave-bar/releases/latest")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (release) {
+      if (!release) return;
+      var asset = (release.assets || []).find(function (a) { return /\.zip$/.test(a.name); });
+      if (asset) document.getElementById("download").href = asset.browser_download_url;
+      var size = asset ? " · " + (asset.size / 1048576).toFixed(1).replace(".", ",") + " МБ" : "";
+      document.getElementById("meta").textContent =
+        "Версия " + release.tag_name.replace(/^v/, "") + size + " · macOS 14 и новее · Apple Silicon";
+    })
+    .catch(function () {});
+</script>
+</body>
+</html>
