@@ -8,7 +8,15 @@
 
 Использует неофициальное API Яндекс Музыки (то же, что и библиотека [yandex-music-api](https://github.com/MarshalX/yandex-music-api)). Без подписки Плюс доступны только 30-секундные фрагменты.
 
-## Сборка
+## Установка
+
+Скачайте `WaveBar-*-arm64.zip` со [страницы релизов](https://github.com/kasevvlad/wave-bar/releases/latest), распакуйте и перенесите `Wave Bar.app` в «Программы». Приложение не нотаризовано, поэтому при первом запуске разрешите его в «Системные настройки → Конфиденциальность и безопасность» или выполните:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Wave Bar.app"
+```
+
+## Сборка из исходников
 
 Нужны macOS 14+ и Command Line Tools.
 
